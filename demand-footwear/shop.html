@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop All Footwear — Demand Footwear</title>
+<meta name="description" content="Browse sneakers, leather shoes, boots, sandals and accessories at Demand Footwear.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<a href="#main" class="skip-link">Skip to content</a>
+<div id="site-header"></div>
+
+<main id="main">
+  <div class="page-hero">
+    <div class="container">
+      <h1>Shop All Footwear</h1>
+      <p>Sneakers, leather shoes, boots, sandals and accessories — find your next favorite pair.</p>
+    </div>
+  </div>
+
+  <div class="container breadcrumb">
+    <a href="index.html">Home</a><span class="sep">/</span><span>Shop</span>
+  </div>
+
+  <div class="container section-tight">
+    <div class="shop-layout">
+      <aside class="filters-panel" id="filtersPanel" aria-label="Product filters"></aside>
+      <div>
+        <div class="shop-toolbar">
+          <div>
+            <input type="search" id="shopSearchInput" class="form-control" placeholder="Search products…" style="min-width:220px;" aria-label="Search products">
+            <span class="result-count" id="resultCount" style="margin-left:10px;"></span>
+          </div>
+          <select class="sort-select" id="sortSelect" aria-label="Sort products">
+            <option value="featured">Sort: Featured</option>
+            <option value="newest">Newest</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="rating">Best Rated</option>
+            <option value="selling">Best Selling</option>
+          </select>
+        </div>
+        <div class="product-grid" id="shopGrid">
+          <div class="skeleton" style="aspect-ratio:.8;"></div>
+          <div class="skeleton" style="aspect-ratio:.8;"></div>
+          <div class="skeleton" style="aspect-ratio:.8;"></div>
+          <div class="skeleton" style="aspect-ratio:.8;"></div>
+        </div>
+        <div class="pagination" id="shopPagination"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer id="site-footer" class="site-footer"></footer>
+
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script src="js/wishlist.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/products.js"></script>
+</body>
+</html>

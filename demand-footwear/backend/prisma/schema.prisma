@@ -1,0 +1,221 @@
+// Demand Footwear — Prisma schema
+// Run `npx prisma migrate dev` after setting DATABASE_URL in backend/.env
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // switch to "mysql" if preferred
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+  STAFF
+}
+
+enum ProductStatus {
+  ACTIVE
+  DRAFT
+  DISCONTINUED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  RETURNED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  CASH_ON_DELIVERY
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  phone         String?
+  passwordHash  String    // bcrypt/argon2 hash — never store plaintext passwords
+  role          UserRole  @default(CUSTOMER)
+  status        String    @default("active")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  addresses     Address[]
+  orders        Order[]
+  reviews       Review[]
+  wishlist      WishlistItem[]
+}
+
+model Address {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  line1     String
+  city      String
+  state     String
+  zip       String
+  country   String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  imageUrl    String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+}
+
+model Product {
+  id                String            @id @default(cuid())
+  sku               String            @unique
+  name              String
+  brand             String
+  description       String
+  price             Decimal           @db.Decimal(10, 2)
+  discountPercent   Int               @default(0)
+  status            ProductStatus     @default(ACTIVE)
+  categoryId        String
+  category          Category          @relation(fields: [categoryId], references: [id])
+  lowStockThreshold Int               @default(8)
+  tags              String[]          @default([])
+  rating            Decimal           @default(0) @db.Decimal(2, 1)
+  reviewCount       Int               @default(0)
+  images            ProductImage[]
+  variants          ProductVariant[]
+  inventory         Inventory?
+  orderItems        OrderItem[]
+  reviews           Review[]
+  wishlistItems     WishlistItem[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  altText   String?
+  sortOrder Int     @default(0)
+}
+
+// A variant represents one purchasable size/color combination.
+model ProductVariant {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  size      String
+  color     String
+  sku       String   @unique
+  stock     Int      @default(0)
+  reserved  Int      @default(0)
+
+  @@unique([productId, size, color])
+}
+
+model Inventory {
+  id                String    @id @default(cuid())
+  productId         String    @unique
+  product           Product   @relation(fields: [productId], references: [id])
+  totalStock        Int       @default(0)
+  reservedStock     Int       @default(0)
+  updatedAt         DateTime  @updatedAt
+  transactions      InventoryTransaction[]
+}
+
+model InventoryTransaction {
+  id           String    @id @default(cuid())
+  inventoryId  String
+  inventory    Inventory @relation(fields: [inventoryId], references: [id])
+  previousQty  Int
+  adjustment   Int
+  newQty       Int
+  reason       String
+  performedBy  String    // user id or "system"
+  createdAt    DateTime  @default(now())
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  orderNumber     String        @unique
+  userId          String?
+  user            User?         @relation(fields: [userId], references: [id])
+  customerName    String
+  email           String
+  phone           String
+  addressLine1    String
+  city            String
+  state           String
+  zip             String
+  country         String
+  deliveryMethod  String
+  subtotal        Decimal       @db.Decimal(10, 2)
+  deliveryFee     Decimal       @db.Decimal(10, 2)
+  tax             Decimal       @db.Decimal(10, 2)
+  discount        Decimal       @default(0) @db.Decimal(10, 2)
+  total           Decimal       @db.Decimal(10, 2)
+  status          OrderStatus   @default(PENDING)
+  items           OrderItem[]
+  payment         Payment?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model OrderItem {
+  id         String   @id @default(cuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  size       String
+  color      String
+  quantity   Int
+  unitPrice  Decimal  @db.Decimal(10, 2)
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  orderId       String        @unique
+  order         Order         @relation(fields: [orderId], references: [id])
+  method        String        // "cod" | "card" | "mobile" | "bank"
+  status        PaymentStatus @default(PENDING)
+  providerRef   String?       // gateway transaction id (never store raw card data)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  rating     Int
+  text       String
+  createdAt  DateTime @default(now())
+}
+
+model WishlistItem {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, productId])
+}
